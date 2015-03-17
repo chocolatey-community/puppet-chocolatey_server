@@ -9,7 +9,7 @@
 #
 class chocolatey_server (
   $port = $::chocolatey_server::params::service_port,
-#) inherits ::chocolatey_server::params {
+) inherits ::chocolatey_server::params {
 
   $chocolatey_server_location = 'C:\tools\chocolatey.server'
   $chocolatey_server_app_pool_name = 'chocolatey.server'
