@@ -1,3 +1,7 @@
+2015-11-03 Release 0.0.4
+- Allow overriding package location [#2](https://github.com/chocolatey/puppet-chocolatey_server/issues/2)
+- Upper bound versions
+
 2015-05-13 Release 0.0.3
 - Update dependencies
 
