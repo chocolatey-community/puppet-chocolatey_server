@@ -37,7 +37,6 @@ class chocolatey_server (
   require chocolatey
 
   $_chocolatey_server_location      = $server_install_location
-  $_chocolatey_server_location      = 'C:\tools\chocolatey.server'
   $_chocolatey_server_app_pool_name = 'chocolatey.server'
   $_chocolatey_server_app_port      = $port
   $_server_package_url              = $server_package_source
