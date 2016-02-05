@@ -24,12 +24,19 @@
 # @param [String] server_package_source The chocolatey source that contains
 #   the `chocolatey.server` package. Defaults to
 #   'https://chocolatey.org/api/v2/'.
+# @param [String] server_install_location The location to that the chocolatey
+#   server will be installed.  This is can be used if you are controlling
+#   the location that chocolatey packages are being installed via some other
+#   means. e.g. environment variable ChocolateyBinRoot.  Defaults to
+#   'C:\tools\chocolatey.server'
 class chocolatey_server (
   $port = $::chocolatey_server::params::service_port,
   $server_package_source = $::chocolatey_server::params::server_package_source,
+  $server_install_location = $::chocolatey_server::params::server_install_location,
 ) inherits ::chocolatey_server::params {
   require chocolatey
 
+  $_chocolatey_server_location      = $server_install_location
   $_chocolatey_server_location      = 'C:\tools\chocolatey.server'
   $_chocolatey_server_app_pool_name = 'chocolatey.server'
   $_chocolatey_server_app_port      = $port
