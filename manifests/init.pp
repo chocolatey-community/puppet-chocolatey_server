@@ -30,66 +30,63 @@
 #   means. e.g. environment variable ChocolateyBinRoot.  Defaults to
 #   'C:\tools\chocolatey.server'
 class chocolatey_server (
-  $port = $::chocolatey_server::params::service_port,
-  $server_package_source = $::chocolatey_server::params::server_package_source,
-  $server_install_location = $::chocolatey_server::params::server_install_location,
-) inherits ::chocolatey_server::params {
+  $service_port          = '80',
+  $server_package_source = 'https://chocolatey.org/api/v2/',
+  $server_install_location = 'C:\tools\chocolatey.server',
+  $chocolatey_server_app_pool_name = 'chocolatey.server',
+  $chocolatey_server_app_port      = $port,
+) {
   require chocolatey
-
-  $_chocolatey_server_location      = $server_install_location
-  $_chocolatey_server_app_pool_name = 'chocolatey.server'
-  $_chocolatey_server_app_port      = $port
-  $_server_package_url              = $server_package_source
 
   # package install
   package {'chocolatey.server':
-    ensure    => installed,
-    provider  => chocolatey,
-    source    => $_server_package_url,
+    ensure   => installed,
+    provider => chocolatey,
+    source   => $server_package_source,
   } ->
 
   # add windows features
   windowsfeature { 'Web-WebServer':
   installmanagementtools => true,
   } ->
-  windowsfeature { 'Web-Asp-Net45':
+    windowsfeature { 'Web-Asp-Net45':
   } ->
 
   # remove default web site
-  iis::manage_site {'Default Web Site':
-    ensure        => absent,
-    site_path     => 'any',
-    app_pool      => 'DefaultAppPool'
+  iis_site {'Default Web Site':
+    ensure   => stopped,
+    app_pool => 'DefaultAppPool'
   } ->
 
   # application in iis
-  iis::manage_app_pool { "${_chocolatey_server_app_pool_name}":
+  iis::manage_app_pool { "${chocolatey_server_app_pool_name}":
     enable_32_bit           => true,
     managed_runtime_version => 'v4.0',
   } ->
-  iis::manage_site {'chocolatey.server':
-    site_path     => $_chocolatey_server_location,
-    port          => "${_chocolatey_server_app_port}",
-    ip_address    => '*',
-    app_pool      => "${_chocolatey_server_app_pool_name}",
+  iis_site {'chocolatey.server':
+    ensure   => 'started',
+    path     => $server_install_location,
+    port     => $service_port,
+    app_pool => $chocolatey_server_app_pool_name,
   } ->
 
   # lock down web directory
-  acl { "${_chocolatey_server_location}":
-    purge      => true,
+    acl { "${server_install_location}":
+    purge                       => true,
     inherit_parent_permissions  => false,
     permissions => [
-     { identity => 'Administrators', rights => ['full'] },
-     { identity => 'IIS_IUSRS', rights => ['read'] },
-     { identity => 'IUSR', rights => ['read'] },
-     { identity => "IIS APPPOOL\\${_chocolatey_server_app_pool_name}", rights => ['read'] }
-   ],
+      { identity => 'Administrators', rights => ['full'] },
+      { identity => 'IIS_IUSRS', rights => ['read'] },
+      { identity => 'IUSR', rights => ['read'] },
+      { identity => "IIS APPPOOL\\${chocolatey_server_app_pool_name}", rights => ['read'] }
+    ],
   } ->
-  acl { "${_chocolatey_server_location}/App_Data":
+
+  acl { "${server_install_location}/App_Data":
     permissions => [
-     { identity => "IIS APPPOOL\\${_chocolatey_server_app_pool_name}", rights => ['modify'] },
-     { identity => 'IIS_IUSRS', rights => ['modify'] }
-   ],
+      { identity => "IIS APPPOOL\\${chocolatey_server_app_pool_name}", rights => ['modify'] },
+      { identity => 'IIS_IUSRS', rights => ['modify'] }
+    ],
   }
   # technically you may only need IIS_IUSRS but I have not tested this yet.
 }
