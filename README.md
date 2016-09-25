@@ -94,6 +94,27 @@ class {'chocolatey_server':
 }
 ~~~
 
+### Use a alternate package folder
+
+~~~puppet
+class { 'chocolatey_server':
+  packages_folder         => 'C:\Chocolatey',
+  port                    => '8080',
+}
+~~~
+
+### Set different permissions on the packages folder
+
+~~~puppet
+class { 'chocolatey_server':
+  packages_folder_permissions = [
+    { identity => 'IIS APPPOOL\\chocolatey.server', rights => ['modify'] },
+    { identity => 'IIS_IUSRS', rights => ['modify'] },
+    { identity => 'Users', rights => ['read'] },
+  ]
+}
+~~~
+
 ## Reference
 
 ### Classes
@@ -105,6 +126,24 @@ class {'chocolatey_server':
 Host your own Chocolatey package repository
 
 #### Parameters
+
+##### `chocolatey_server_app_pool_name`
+Set apppool name used by the chocolatey.server website. Defaults to
+'chocolatey.server'.
+
+##### `packages_folder`
+An alternate folder can be defined for the .nupkg files. This is where the
+nuget packages are actually stored that will be served by the chocolatey server.
+
+Note: This is different from 'server_package_source' as that defines where
+the chocolatey.server package is located.
+
+##### `packages_folder_permissions`
+Set permissions on packages folder. Defaults to:
+  * IIS APPOOL\${chocolatey_server_app_pool_name} - modify
+  * IIS_IUSRS - modify
+
+The permissions should be passed as an array of identity and permissions.
 
 ##### `port`
 The port for the server website. Defaults to '80'.

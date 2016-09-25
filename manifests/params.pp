@@ -5,7 +5,13 @@
 class chocolatey_server::params {
   case $::osfamily {
     'windows': {
-      $service_port          = '80'
+      $chocolatey_server_app_pool_name = 'chocolatey.server'
+      $packages_folder = undef
+      $packages_folder_permissions = [
+        { identity => "IIS APPPOOL\\${chocolatey_server_app_pool_name}", rights => ['modify'] },
+        { identity => 'IIS_IUSRS', rights => ['modify'] }
+      ]
+      $service_port = '80'
       $server_package_source = 'https://chocolatey.org/api/v2/'
       $server_install_location = 'C:\tools\chocolatey.server'
     }
