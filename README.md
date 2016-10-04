@@ -94,6 +94,15 @@ class {'chocolatey_server':
 }
 ~~~
 
+### Set a different apikey and allow packages to be overwritten
+
+~~~puppet
+class { 'chocolatey_server':
+  apikey                 => 'Sup3rS3cret',
+  allow_package_override => true,
+}
+~~~
+
 ### Use a alternate package folder and port without disabling default website
 
 ~~~puppet
@@ -128,6 +137,14 @@ Host your own Chocolatey package repository
 
 #### Parameters
 
+##### `allow_package_override`
+Controls whether or not packages can be overwritten if a package with the same
+id and version already exist. Defaults to 'false'.
+
+##### `apikey`
+Set the apikey for chocolatey server used to push packages. Defaults to
+'chocolateyrocks'.
+
 ##### `chocolatey_server_app_pool_name`
 Set apppool name used by the chocolatey.server website. Defaults to
 'chocolatey.server'.
@@ -154,6 +171,10 @@ The permissions should be passed as an array of identity and permissions.
 
 ##### `port`
 The port for the server website. Defaults to '80'.
+
+##### `require_apikey`
+Controls whether or not an apikey is required to push packages to the chocolatey
+server. Defaults to 'true'.
 
 ##### `server_package_source`
 The Chocolatey source that contains the `chocolatey.server` package.

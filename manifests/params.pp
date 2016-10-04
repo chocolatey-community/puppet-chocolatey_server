@@ -5,6 +5,8 @@
 class chocolatey_server::params {
   case $::osfamily {
     'windows': {
+      $allow_package_override = false
+      $apikey = 'chocolateyrocks'
       $chocolatey_server_app_pool_name = 'chocolatey.server'
       $disable_default_website = true
       $packages_folder = undef
@@ -12,6 +14,7 @@ class chocolatey_server::params {
         { identity => "IIS APPPOOL\\${chocolatey_server_app_pool_name}", rights => ['modify'] },
         { identity => 'IIS_IUSRS', rights => ['modify'] }
       ]
+      $require_apikey = true
       $service_port = '80'
       $server_package_source = 'https://chocolatey.org/api/v2/'
       $server_install_location = 'C:\tools\chocolatey.server'

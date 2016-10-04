@@ -32,11 +32,14 @@
 #   means. e.g. environment variable ChocolateyBinRoot.  Defaults to
 #   'C:\tools\chocolatey.server'
 class chocolatey_server (
+  $allow_package_override = $::chocolatey_server::params::allow_package_override,
+  $apikey = $::chocolatey_server::params::apikey,
   $chocolatey_server_app_pool_name = $::chocolatey_server::params::chocolatey_server_app_pool_name,
   $disable_default_website = $::chocolatey_server::params::disable_default_website,
   $packages_folder = $::chocolatey_server::params::packages_folder,
   $packages_folder_permissions = $::chocolatey_server::params::packages_folder_permissions,
   $port = $::chocolatey_server::params::service_port,
+  $require_apikey = $::chocolatey_server::params::require_apikey,
   $server_package_source = $::chocolatey_server::params::server_package_source,
   $server_install_location = $::chocolatey_server::params::server_install_location,
 ) inherits ::chocolatey_server::params {
@@ -139,6 +142,17 @@ class chocolatey_server (
       { identity => 'IIS_IUSRS', rights => ['modify'] }
     ],
     require     => Package['chocolatey.server'],
+  }
+
+  # configure chocolatey server settings
+  file { "${_chocolatey_server_location}/web.config":
+    ensure  => file,
+    content => epp('chocolatey_server/web.config.epp', {
+      'allowOverrideExistingPackageOnPush' => $allow_package_override,
+      'apiKey'                             => $apikey,
+      'requireApiKey'                      => $require_apikey,
+    }),
+    require => Package['chocolatey.server'],
   }
 
   # only set permissions if an alternate package folder is undefined
