@@ -37,7 +37,7 @@
     },
     {
       "name": "puppetlabs/powershell",
-      "version_requirement": ">= 1.0.4 < 2.0.0"
+      "version_requirement": ">= 1.0.4 < 3.0.0"
     },
     {
       "name": "puppet/iis",
