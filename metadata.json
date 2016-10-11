@@ -1,6 +1,6 @@
 {
   "name": "chocolatey-chocolatey_server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "author": "chocolatey",
   "summary": "The Chocolatey Simple Server Package Feed Host",
   "license": "Apache-2.0",
