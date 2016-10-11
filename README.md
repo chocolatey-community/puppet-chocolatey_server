@@ -49,7 +49,9 @@ For more details about the other types of package feeds, see [host your own feed
 
 ### Setup Requirements
 
-Chocolatey installed
+* Chocolatey installed
+* [`chocolatey/chocolatey`](https://forge.puppet.com/chocolatey/chocolatey) OR [`puppetlabs/chocolatey`](https://forge.puppet.com/puppetlabs/chocolatey)
+  * **Note:** either or both of these modules can handle ensuring the install of Chocolatey.
 
 ### Beginning with Chocolatey Server
 
