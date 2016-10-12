@@ -159,7 +159,8 @@ class chocolatey_server (
   unless $packages_folder {
     # ensure app_data folder is created
     file { "${_chocolatey_server_location}/App_Data":
-      ensure => directory,
+      ensure  => directory,
+      require => Package['chocolatey.server'],
     }
 
     # ensure packages folder is created
@@ -171,7 +172,8 @@ class chocolatey_server (
     acl { "${_chocolatey_server_location}/App_Data":
       permissions => $packages_folder_permissions,
       require     => [Iis::Manage_app_pool["${_chocolatey_server_app_pool_name}"],
-                      File["${_chocolatey_server_location}/App_Data"]],
+                      File["${_chocolatey_server_location}/App_Data"],
+                      Package['chocolatey.server']],
     }
     # technically you may only need IIS_IUSRS but I have not tested this yet.
   }
