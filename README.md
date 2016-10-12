@@ -94,10 +94,11 @@ class {'chocolatey_server':
 }
 ~~~
 
-### Use a alternate package folder
+### Use a alternate package folder and port without disabling default website
 
 ~~~puppet
 class { 'chocolatey_server':
+  disable_default_website => false,
   packages_folder         => 'C:\Chocolatey',
   port                    => '8080',
 }
@@ -130,6 +131,12 @@ Host your own Chocolatey package repository
 ##### `chocolatey_server_app_pool_name`
 Set apppool name used by the chocolatey.server website. Defaults to
 'chocolatey.server'.
+
+##### `disable_default_website`
+The default website is stopped to prevent conflicts with the
+chocolatey server website. An alternate port can be defined and
+this option can be set to disabled so it doesn't modify the default
+website. Defaults to 'true'.
 
 ##### `packages_folder`
 An alternate folder can be defined for the .nupkg files. This is where the

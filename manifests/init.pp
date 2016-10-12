@@ -33,6 +33,7 @@
 #   'C:\tools\chocolatey.server'
 class chocolatey_server (
   $chocolatey_server_app_pool_name = $::chocolatey_server::params::chocolatey_server_app_pool_name,
+  $disable_default_website = $::chocolatey_server::params::disable_default_website,
   $packages_folder = $::chocolatey_server::params::packages_folder,
   $packages_folder_permissions = $::chocolatey_server::params::packages_folder_permissions,
   $port = $::chocolatey_server::params::service_port,
@@ -56,6 +57,14 @@ class chocolatey_server (
   $_web_asp_net = $_is_windows_2008 ? {
     true    => 'Web-Asp-Net',
     default => 'Web-Asp-Net45'
+  }
+
+  # disable default web site
+  if $disable_default_website {
+    iis::manage_site {'Default Web Site':
+      ensure   => stopped,
+      app_pool => 'DefaultAppPool',
+    }
   }
 
   # package install

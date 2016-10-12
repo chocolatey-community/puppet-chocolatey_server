@@ -6,6 +6,7 @@ class chocolatey_server::params {
   case $::osfamily {
     'windows': {
       $chocolatey_server_app_pool_name = 'chocolatey.server'
+      $disable_default_website = true
       $packages_folder = undef
       $packages_folder_permissions = [
         { identity => "IIS APPPOOL\\${chocolatey_server_app_pool_name}", rights => ['modify'] },
