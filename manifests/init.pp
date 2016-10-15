@@ -64,9 +64,10 @@ class chocolatey_server (
 
   # disable default web site
   if $disable_default_website {
-    iis::manage_site {'Default Web Site':
-      ensure   => stopped,
-      app_pool => 'DefaultAppPool',
+    iis_site {'Default Web Site':
+      ensure          => stopped,
+      applicationpool => 'DefaultAppPool',
+      require         => Iis_feature['Web-WebServer'],
     }
   }
 
@@ -87,13 +88,6 @@ class chocolatey_server (
   }
   -> iis_feature { 'Web-AppInit':
     ensure => present,
-  }
-
-  # remove default web site
-  -> iis_site {'Default Web Site':
-    ensure          => absent,
-    applicationpool => 'DefaultAppPool',
-    require         => Iis_feature['Web-WebServer'],
   }
 
   # application in iis
@@ -136,22 +130,11 @@ class chocolatey_server (
     ],
     require                    => Package['chocolatey.server'],
   }
-  -> acl { "${_chocolatey_server_location}/App_Data":
-    permissions => [
-      { identity => "IIS APPPOOL\\${_chocolatey_server_app_pool_name}", rights => ['modify'] },
-      { identity => 'IIS_IUSRS', rights => ['modify'] }
-    ],
-    require     => Package['chocolatey.server'],
-  }
 
   # configure chocolatey server settings
   file { "${_chocolatey_server_location}/web.config":
     ensure  => file,
-    content => epp('chocolatey_server/web.config.epp', {
-      'allowOverrideExistingPackageOnPush' => $allow_package_override,
-      'apiKey'                             => $apikey,
-      'requireApiKey'                      => $require_apikey,
-    }),
+    content => template('chocolatey_server/web.config.erb'),
     require => Package['chocolatey.server'],
   }
 
@@ -171,7 +154,7 @@ class chocolatey_server (
 
     acl { "${_chocolatey_server_location}/App_Data":
       permissions => $packages_folder_permissions,
-      require     => [Iis::Manage_app_pool["${_chocolatey_server_app_pool_name}"],
+      require     => [Iis_application_pool[$_chocolatey_server_app_pool_name],
                       File["${_chocolatey_server_location}/App_Data"],
                       Package['chocolatey.server']],
     }
@@ -186,7 +169,7 @@ class chocolatey_server (
     }
 
     # ensure packages folder is created
-    file { "${packages_folder}":
+    file { $packages_folder:
       ensure => directory,
     }
 
@@ -196,13 +179,13 @@ class chocolatey_server (
       ensure  => link,
       force   => true,
       target  => $packages_folder,
-      require => File["${packages_folder}"],
+      require => File[$packages_folder],
     }
 
     # set permissions on the new packages folder
-    acl { "${packages_folder}":
+    acl { $packages_folder:
       permissions => $packages_folder_permissions,
-      require     => File["${packages_folder}"],
+      require     => File[$packages_folder],
     }
   }
 

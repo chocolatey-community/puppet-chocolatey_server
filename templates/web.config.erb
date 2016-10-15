@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Managed by Puppet
+
+  For more information on how to configure your ASP.NET application, please visit
+  http://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+  <configSections>
+    <section name="httpAuth" type="HttpAuth.Configuration.HttpAuthSection,HttpAuthenticationModule"/>
+    <sectionGroup name="elmah">
+      <section name="security" requirePermission="false" type="Elmah.SecuritySectionHandler, Elmah"/>
+      <section name="errorLog" requirePermission="false" type="Elmah.ErrorLogSectionHandler, Elmah"/>
+      <section name="errorMail" requirePermission="false" type="Elmah.ErrorMailSectionHandler, Elmah"/>
+      <section name="errorFilter" requirePermission="false" type="Elmah.ErrorFilterSectionHandler, Elmah"/>
+    </sectionGroup>
+  </configSections>
+  <!-- To turn on basic auth with the HttpAuth Module, perform the following:
+       - Set up your users in the credentials section below.
+       - In system.web/authorization (section after httpAuth), find the allow 
+         without verbs and change the word "allow" to "deny". Leave the allow 
+         with 'verbs="PUT,POST"' alone or you won't be able to push packages.
+	  -->
+  <httpAuth mode="Basic" realm="Chocolatey Simple Server">
+    <!-- The above values have been tested to work. Possible values you can 
+         set (with no guarantees or support):
+         - Mode - {None|Basic|Digest}
+         - Realm - {Plain|Secret|<Pick some value>} 
+      -->
+    <credentials source="Inline" passwordFormat="Clear">
+      <!--The above values have been tested to work. Possible values you can 
+          set (with no guarantees or support):
+          - Source - {Inline|FormsAuthentication|MembershipProvider}
+          - PasswordFormat - {Clear|SHA1|MD5|MD5Digest} - MD5Digest only with Digest mode
+        -->
+      <!-- remove or change this user -->
+      <user name="choco" password="rocks"/>
+      <!-- add users here -->
+    </credentials>
+  </httpAuth>
+  <system.web>
+    <compilation debug="false" targetFramework="4.6"/>
+    <!-- maxRequestLength is specified in Kb -->
+    <httpRuntime targetFramework="4.6" executionTimeout="1200" maxRequestLength="2147482548"/>
+    <!-- <authentication mode="Windows|Forms|Passport|None">-->
+    <authentication mode="None"/>
+    <authorization>
+      <!-- leave this alone or you won't be able to push packages -->
+      <allow users="?" verbs="PUT, POST"/>
+      <!-- change "allow" below to "deny" to turn on basic auth -->
+      <allow users="?"/>
+    </authorization>
+    <httpModules>
+      <add name="ErrorLog" type="Elmah.ErrorLogModule, Elmah"/>
+      <add name="ErrorMail" type="Elmah.ErrorMailModule, Elmah"/>
+      <add name="ErrorFilter" type="Elmah.ErrorFilterModule, Elmah"/>
+      <add name="HttpAuthenticationModule" type="HttpAuth.HttpAuthenticationModule, HttpAuthenticationModule"/>
+    </httpModules>
+    <customErrors mode="RemoteOnly"/>
+  </system.web>
+  <system.webServer>
+    <handlers>
+      <remove name="ExtensionlessUrlHandler-Integrated-4.0"/>
+      <remove name="OPTIONSVerbHandler"/>
+      <remove name="TRACEVerbHandler"/>
+      <add name="ExtensionlessUrlHandler-Integrated-4.0" path="*." verb="*" type="System.Web.Handlers.TransferRequestHandler"
+        preCondition="integratedMode,runtimeVersionv4.0"/>
+      <remove name="WebDAV"/>
+      <add name="PowerShell-Integrated-4.0" path="*.ps1" verb="GET,HEAD" type="System.Web.UI.PageHandlerFactory" modules="ManagedPipelineHandler"
+        preCondition="integratedMode,runtimeVersionv4.0"/>
+      <!-- Depending on IIS configuration, these may have to be added.
+      <remove name="ExtensionlessUrlHandler-Integrated-4.0" />
+      <add name="ExtensionlessUrlHandler-Integrated-4.0" path="*." verb="GET,HEAD,POST,PUT,DEBUG" type="System.Web.Handlers.TransferRequestHandler" preCondition="integratedMode,runtimeVersionv4.0" />
+      <remove name="OPTIONSVerbHandler" /><remove name="TRACEVerbHandler" />
+      <add name="ExtensionlessUrlHandler-Integrated-4.0" path="*." verb="*" type="System.Web.Handlers.TransferRequestHandler" preCondition="integratedMode,runtimeVersionv4.0" />
+        -->
+    </handlers>
+    <staticContent>
+      <remove fileExtension=".ps1"/>
+      <mimeMap fileExtension=".nupkg" mimeType="application/zip"/>
+    </staticContent>
+    <modules runAllManagedModulesForAllRequests="true">
+      <remove name="WebDAVModule"/>
+      <add name="ErrorLog" type="Elmah.ErrorLogModule, Elmah" preCondition="managedHandler"/>
+      <add name="ErrorMail" type="Elmah.ErrorMailModule, Elmah" preCondition="managedHandler"/>
+      <add name="ErrorFilter" type="Elmah.ErrorFilterModule, Elmah" preCondition="managedHandler"/>
+    </modules>
+    <security>
+      <requestFiltering>
+        <!-- maxAllowedContentLength is specified in Bytes -->
+        <requestLimits maxAllowedContentLength="2147482548"/>
+      </requestFiltering>
+    </security>
+    <validation validateIntegratedModeConfiguration="false"/>
+  </system.webServer>
+  <system.serviceModel>
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true"/>
+  </system.serviceModel>
+  <elmah>
+    <!--
+        See http://code.google.com/p/elmah/wiki/SecuringErrorLogPages for 
+        more information on remote access and securing ELMAH.
+    -->
+    <security allowRemoteAccess="false"/>
+    <errorLog type="Elmah.XmlFileErrorLog, Elmah" logPath="~/App_Data/Logs"/>
+  </elmah>
+  <location path="elmah.axd" inheritInChildApplications="false">
+    <system.web>
+      <httpHandlers>
+        <add verb="POST,GET,HEAD" path="elmah.axd" type="Elmah.ErrorLogPageFactory, Elmah"/>
+      </httpHandlers>
+      <!-- 
+        See http://code.google.com/p/elmah/wiki/SecuringErrorLogPages for 
+        more information on using ASP.NET authorization securing ELMAH.
+
+      <authorization>
+        <allow roles="admin" />
+        <deny users="*" />  
+      </authorization>
+      -->
+    </system.web>
+    <system.webServer>
+      <handlers>
+        <add name="ELMAH" verb="POST,GET,HEAD" path="elmah.axd" type="Elmah.ErrorLogPageFactory, Elmah" preCondition="integratedMode"/>
+      </handlers>
+    </system.webServer>
+  </location>
+  <appSettings>
+    <!--
+    Determines if an Api Key is required to push\delete packages from the server. 
+    -->
+    <add key="requireApiKey" value="<%= @require_apikey %>"/>
+
+    <!--
+    Set the value here to allow people to push/delete packages from the server.
+    NOTE: This is a shared key (password) for all users.
+    -->
+    <add key="apiKey" value="<%= @apikey %>"/>
+
+    <!--
+    Change the path to the packages folder. Default is ~/Packages.
+    This can be a virtual or physical path.
+    -->
+    <add key="packagesPath" value="~/App_Data/Packages"/>
+
+    <!--
+    Set allowOverrideExistingPackageOnPush to false if attempts to upload a package that already exists should fail (do not allow overwriting packages with same id + version).
+    -->
+    <add key="allowOverrideExistingPackageOnPush" value="<%= @allow_package_override %>"/>
+
+    <!--
+    Set ignoreSymbolsPackages to true to filter out symbols packages. Since NuGet.Server does not come with a symbol server,
+    it makes sense to ignore this type of packages. When enabled, files named `.symbols.nupkg` or packages containing a `/src` folder will be ignored.
+    
+    If you only push .symbols.nupkg packages, set this to false so that packages can be uploaded.
+    -->
+    <add key="ignoreSymbolsPackages" value="true"/>
+
+    <!--
+    Set enableDelisting to true to enable delist instead of delete as a result of a "nuget delete" command.
+    - delete: package is deleted from the repository's local filesystem.
+    - delist:
+      - "nuget delete": the "hidden" file attribute of the corresponding nupkg on the repository local filesystem is turned on instead of deleting the file.
+      - "nuget list" skips delisted packages, i.e. those that have the hidden attribute set on their nupkg.
+      - "nuget install packageid -version version" command will succeed for both listed and delisted packages.
+          e.g. delisted packages can still be downloaded by clients that explicitly specify their version.
+    -->
+    <add key="enableDelisting" value="true"/>
+
+    <!--
+    Set enableFrameworkFiltering to true to enable filtering packages by their supported frameworks during search.
+    -->
+    <add key="enableFrameworkFiltering" value="false"/>
+
+    <!--
+    When running NuGet.Server in a NAT network, ASP.NET may embed the server's internal IP address in the V2 feed.
+    Uncomment the following configuration entry to enable NAT support.
+    -->
+    <!-- <add key="aspnet:UseHostHeaderForRequestUrl" value="true" /> -->
+    <!--
+    Set enableFileSystemMonitoring to true (default) to enable file system monitoring (which will update the package cache appropriately on file system changes).
+    Set it to false to disable file system monitoring.
+    NOTE: Disabling file system monitoring may result in increased storage capacity requirements as package cache may only be purged by a background job running 
+    on a fixed 1-hour interval.
+    -->
+    <add key="enableFileSystemMonitoring" value="true"/>
+    <!--
+      Turns off ASP.NET's built in simple membership provider
+    -->
+    <add key="enableSimpleMembership" value="false"/>
+  </appSettings>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="Newtonsoft.Json" publicKeyToken="30ad4fe6b2a6aeed" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-10.0.0.0" newVersion="10.0.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Http" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-5.2.3.0" newVersion="5.2.3.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Net.Http.Formatting" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-5.2.3.0" newVersion="5.2.3.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Data.Edm" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-5.8.3.0" newVersion="5.8.3.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="Microsoft.Data.OData" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-5.8.3.0" newVersion="5.8.3.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Spatial" publicKeyToken="31bf3856ad364e35" culture="neutral"/>
+        <bindingRedirect oldVersion="0.0.0.0-5.8.3.0" newVersion="5.8.3.0"/>
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
