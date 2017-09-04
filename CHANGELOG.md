@@ -1,3 +1,6 @@
+2017-09-04 Release 0.0.6
+- Support puppetlabs/iis puppet module
+
 2016-10-11 Release 0.0.5
 - Allow either chocolatey/chocolatey or puppetlabs/chocolatey [#11](https://github.com/chocolatey/puppet-chocolatey_server/issues/11)
 - Support Windows 2008 [#7](https://github.com/chocolatey/puppet-chocolatey_server/issues/7)

@@ -38,8 +38,21 @@ RSpec::Core::RakeTask.new(:acceptance) do |t|
   t.pattern = 'spec/acceptance'
 end
 
-task :metadata do
+task :metadata_lint do
   sh "metadata-json-lint metadata.json"
+end
+
+desc "Custom: Download third-party modules"
+task :r10k do
+  system 'r10k puppetfile install -v'
+end
+
+desc "Custom: Prepare symbolic link to root puppet module folders"
+task :symlink do
+  FileUtils.remove_dir("development/modules/chocolatey_server",:verbose => true)
+  FileUtils.mkdir_p "development/modules/chocolatey_server"
+  FileUtils.cd "development/modules/chocolatey_server"
+  system 'ln -s "../../../manifests" "manifests"'
 end
 
 desc "Run syntax, lint, and spec tests."
@@ -47,5 +60,9 @@ task :test => [
   :syntax,
   :lint,
   :spec,
-  :metadata,
+  :metadata_lint,
+  :r10k,
+  :symlink
 ]
+
+task :default => [:test]
