@@ -37,7 +37,7 @@ class chocolatey_server (
   require chocolatey
 
   $_chocolatey_server_location      = $server_install_location
-  $_chocolatey_server_app_pool_name = 'chocolatey.server'
+  $_chocolatey_server_app_pool_name = 'chocolateyserver'
   $_chocolatey_server_app_port      = $port
   $_server_package_url              = $server_package_source
   $_is_windows_2008 = $::kernelmajversion ? {
@@ -68,24 +68,30 @@ class chocolatey_server (
   } ->
 
   # remove default web site
-  iis::manage_site {'Default Web Site':
-    ensure    => absent,
-    site_path => 'any',
-    app_pool  => 'DefaultAppPool',
-    require   => Windowsfeature['Web-WebServer'],
+  iis_site {'Default Web Site':
+    ensure           => absent,
+    applicationpool => 'DefaultAppPool',
+    require          => Windowsfeature['Web-WebServer'],
   } ->
 
   # application in iis
-  iis::manage_app_pool { "${_chocolatey_server_app_pool_name}":
-    enable_32_bit           => true,
-    managed_runtime_version => 'v4.0',
+  iis_application_pool { "${_chocolatey_server_app_pool_name}":
+    ensure                    => 'present',
+    state                     => 'started',
+    enable32_bit_app_on_win64 => true,
+    managed_runtime_version   => 'v4.0',
   } ->
-  iis::manage_site {'chocolatey.server':
-    site_path  => $_chocolatey_server_location,
-    port       => "${_chocolatey_server_app_port}",
-    ip_address => '*',
-    app_pool   => "${_chocolatey_server_app_pool_name}",
-    require    => Package['chocolatey.server'],
+  iis_site {'chocolateyserver':
+    ensure          => 'started',
+    physicalpath    => $_chocolatey_server_location,
+    applicationpool => "${_chocolatey_server_app_pool_name}",
+    bindings        =>  [
+      {
+        'bindinginformation' => '*:80:',
+        'protocol'           => 'http'
+      }
+    ],
+    require         => Package['chocolatey.server'],
   } ->
 
   # lock down web directory
