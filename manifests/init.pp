@@ -85,11 +85,15 @@ class chocolatey_server (
     state                     => 'started',
     enable32_bit_app_on_win64 => true,
     managed_runtime_version   => 'v4.0',
+    start_mode                => 'AlwaysRunning',
+    idle_timeout              => '00:00:00',
+    restart_time_limit        => '00:00:00',
   }
   -> iis_site {'chocolateyserver':
     ensure          => 'started',
     physicalpath    => $_chocolatey_server_location,
     applicationpool => $_chocolatey_server_app_pool_name,
+    preloadenabled  => true,
     bindings        =>  [
       {
         'bindinginformation' => '*:80:',
