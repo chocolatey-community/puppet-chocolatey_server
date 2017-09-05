@@ -94,12 +94,6 @@ class chocolatey_server (
     physicalpath    => $_chocolatey_server_location,
     applicationpool => $_chocolatey_server_app_pool_name,
     preloadenabled  => true,
-    bindings        =>  [
-      {
-        'bindinginformation' => '*:80:',
-        'protocol'           => 'http'
-      }
-    ],
     require         => Package['chocolatey.server'],
   }
 

@@ -40,6 +40,9 @@ rdoc
 spec/reports
 test/version_tmp
 tmp
+.idea
+.DS_Store
+development/modules
 /.idea/
 /.vscode/
 .config
