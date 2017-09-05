@@ -1,72 +1,76 @@
+require 'rake'
+require 'rspec/core/rake_task'
 require 'puppetlabs_spec_helper/rake_tasks'
-require 'puppet/version'
-require 'puppet/vendor/semantic/lib/semantic' unless Puppet.version.to_f < 3.6
-require 'puppet-lint/tasks/puppet-lint'
-require 'puppet-syntax/tasks/puppet-syntax'
+require 'puppet_blacksmith/rake_tasks' if Bundler.rubygems.find_name('puppet-blacksmith').any?
+require 'puppet'
 
-# These gems aren't always present, for instance
-# on Travis with --without development
 begin
-  require 'puppet_blacksmith/rake_tasks'
+  require 'beaker/tasks/test' unless RUBY_PLATFORM =~ /win32/
 rescue LoadError
+  #Do nothing, only installed with system_tests group
 end
 
-Rake::Task[:lint].clear
+# If puppet does not support symlinks (e.g., puppet <= 3.5) we cannot use
+# puppetlabs_spec_helper's `rake spec` task because it requires symlink
+# support. Redefine `rake spec` to avoid calling `rake spec_prep` (requires
+# symlinks to place fixtures) and restrict the pattern match only files under
+# the 'unit' directory (tests in other dirs require fixtures).
+if Puppet::Util::Platform.windows? and !Puppet::FileSystem.respond_to?(:symlink)
+  ENV["SPEC"] = "./spec/{unit,integration}/**/*_spec.rb"
+  Rake::Task[:spec].clear if Rake::Task.task_defined?(:spec)
+  task :spec do
+    Rake::Task[:spec_standalone].invoke
+    Rake::Task[:spec_clean].invoke
+  end
+end
 
-PuppetLint.configuration.relative = true
 # These lint exclusions are in puppetlabs_spec_helper but needs a version above 0.10.3
 # Line length test is 80 chars in puppet-lint 1.1.0
-PuppetLint.configuration.send("disable_80chars")
+PuppetLint.configuration.send('disable_80chars')
 # Line length test is 140 chars in puppet-lint 2.x
 PuppetLint.configuration.send('disable_140chars')
-PuppetLint.configuration.log_format = "%{path}:%{linenumber}:%{check}:%{KIND}:%{message}"
-PuppetLint.configuration.fail_on_warnings = true
+# PuppetLint.configuration.relative = true
+# PuppetLint.configuration.log_format = "%{path}:%{linenumber}:%{check}:%{KIND}:%{message}"
+# PuppetLint.configuration.fail_on_warnings = true
 
-# Forsake support for Puppet 2.6.2 for the benefit of cleaner code.
-# http://puppet-lint.com/checks/class_parameter_defaults/
-PuppetLint.configuration.send('disable_class_parameter_defaults')
-# http://puppet-lint.com/checks/class_inherits_from_params_class/
-PuppetLint.configuration.send('disable_class_inherits_from_params_class')
+# exclude_paths = [
+#   "bundle/**/*",
+#   "pkg/**/*",
+#   "vendor/**/*",
+#   "spec/**/*",
+# ]
+# PuppetLint.configuration.ignore_paths = exclude_paths
+# PuppetSyntax.exclude_paths = exclude_paths
 
-exclude_paths = [
-  "bundle/**/*",
-  "pkg/**/*",
-  "vendor/**/*",
-  "spec/**/*",
-]
-PuppetLint.configuration.ignore_paths = exclude_paths
-PuppetSyntax.exclude_paths = exclude_paths
+task :default => [:spec]
 
-desc "Run acceptance tests"
-RSpec::Core::RakeTask.new(:acceptance) do |t|
-  t.pattern = 'spec/acceptance'
+desc 'Generate code coverage'
+RSpec::Core::RakeTask.new(:coverage) do |t|
+  t.rcov = true
+  t.rcov_opts = ['--exclude', 'spec']
 end
 
-task :metadata_lint do
-  sh "metadata-json-lint metadata.json"
-end
+# desc "Run acceptance tests"
+# RSpec::Core::RakeTask.new(:acceptance) do |t|
+#   t.pattern = 'spec/acceptance'
+# end
 
-desc "Custom: Download third-party modules"
-task :r10k do
-  system 'r10k puppetfile install -v'
-end
+# task :metadata_lint do
+#   sh "metadata-json-lint metadata.json"
+# end
 
-desc "Custom: Prepare symbolic link to root puppet module folders"
-task :symlink do
-  FileUtils.remove_dir("development/modules/chocolatey_server",:verbose => true)
-  FileUtils.mkdir_p "development/modules/chocolatey_server"
-  FileUtils.cd "development/modules/chocolatey_server"
-  system 'ln -s "../../../manifests" "manifests"'
-end
+# desc "Custom: Download third-party modules"
+# task :r10k do
+#   system 'r10k puppetfile install -v'
+# end
 
-desc "Run syntax, lint, and spec tests."
-task :test => [
-  :syntax,
-  :lint,
-  :spec,
-  :metadata_lint,
-  :r10k,
-  :symlink
-]
 
-task :default => [:test]
+# desc "Run syntax, lint, and spec tests."
+# task :test => [
+#   :syntax,
+#   :lint,
+#   :spec,
+#   :metadata_lint,
+#   :r10k,
+#   :symlink
+# ]
