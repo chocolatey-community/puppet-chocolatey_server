@@ -59,10 +59,10 @@ end
 #   sh "metadata-json-lint metadata.json"
 # end
 
-# desc "Custom: Download third-party modules"
-# task :r10k do
-#   system 'r10k puppetfile install -v'
-# end
+desc "Custom: Download third-party modules"
+task :r10k do
+  system 'r10k puppetfile install -v'
+end
 
 
 # desc "Run syntax, lint, and spec tests."
