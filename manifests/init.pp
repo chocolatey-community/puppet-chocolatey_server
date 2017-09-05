@@ -61,17 +61,23 @@ class chocolatey_server (
   }
 
   # add windows features
-  windowsfeature { 'Web-WebServer':
-    installmanagementtools => $_install_management_tools,
+  iis_feature { 'Web-WebServer':
+    ensure                   => present,
+    include_management_tools => $_install_management_tools,
   } ->
-  windowsfeature { "${_web_asp_net}":
+  iis_feature { $_web_asp_net:
+    ensure => present,
   } ->
+  iis_feature { 'Web-AppInit':
+    ensure => present,
+  } ->
+
 
   # remove default web site
   iis_site {'Default Web Site':
     ensure           => absent,
     applicationpool => 'DefaultAppPool',
-    require          => Windowsfeature['Web-WebServer'],
+    require         => Iis_feature['Web-WebServer'],
   } ->
 
   # application in iis
