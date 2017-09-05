@@ -75,13 +75,13 @@ class chocolatey_server (
 
   # remove default web site
   iis_site {'Default Web Site':
-    ensure           => absent,
+    ensure          => absent,
     applicationpool => 'DefaultAppPool',
     require         => Iis_feature['Web-WebServer'],
   } ->
 
   # application in iis
-  iis_application_pool { "${_chocolatey_server_app_pool_name}":
+  iis_application_pool { $_chocolatey_server_app_pool_name:
     ensure                    => 'present',
     state                     => 'started',
     enable32_bit_app_on_win64 => true,
@@ -90,7 +90,7 @@ class chocolatey_server (
   iis_site {'chocolateyserver':
     ensure          => 'started',
     physicalpath    => $_chocolatey_server_location,
-    applicationpool => "${_chocolatey_server_app_pool_name}",
+    applicationpool => $_chocolatey_server_app_pool_name,
     bindings        =>  [
       {
         'bindinginformation' => '*:80:',
@@ -101,7 +101,7 @@ class chocolatey_server (
   } ->
 
   # lock down web directory
-  acl { "${_chocolatey_server_location}":
+  acl { $_chocolatey_server_location:
     purge                      => true,
     inherit_parent_permissions => false,
     permissions                => [
