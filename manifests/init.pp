@@ -70,7 +70,7 @@ class chocolatey_server (
   # remove default web site
   iis_site {'Default Web Site':
     ensure           => absent,
-    applicationpool => 'DefaultAppPool',
+    applicationpool  => 'DefaultAppPool',
     require          => Windowsfeature['Web-WebServer'],
   } ->
 
