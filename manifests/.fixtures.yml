@@ -1,0 +1,7 @@
+fixtures:
+  forge_modules:
+    acl:          "puppetlabs/acl"
+    powershell:   "puppetlabs/powershell"
+    iis:          "puppetlabs/iis"
+  symlinks:
+    chocolatey_server: "#{source_dir}"

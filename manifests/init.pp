@@ -61,35 +61,44 @@ class chocolatey_server (
   }
 
   # add windows features
-  windowsfeature { 'Web-WebServer':
-    installmanagementtools => $_install_management_tools,
-  } ->
-  windowsfeature { "${_web_asp_net}":
-  } ->
+  iis_feature { 'Web-WebServer':
+    ensure                   => present,
+    include_management_tools => $_install_management_tools,
+  }
+  -> iis_feature { $_web_asp_net:
+    ensure => present,
+  }
+  -> iis_feature { 'Web-AppInit':
+    ensure => present,
+  }
 
   # remove default web site
-  iis_site {'Default Web Site':
-    ensure           => absent,
-    applicationpool  => 'DefaultAppPool',
-    require          => Windowsfeature['Web-WebServer'],
-  } ->
+ -> iis_site {'Default Web Site':
+    ensure          => absent,
+    applicationpool => 'DefaultAppPool',
+    require         => Iis_feature['Web-WebServer'],
+  }
 
   # application in iis
-  iis_application_pool { "${_chocolatey_server_app_pool_name}":
+  -> iis_application_pool { $_chocolatey_server_app_pool_name:
     ensure                    => 'present',
     state                     => 'started',
     enable32_bit_app_on_win64 => true,
     managed_runtime_version   => 'v4.0',
-  } ->
-  iis_site {'chocolateyserver':
+    start_mode                => 'AlwaysRunning',
+    idle_timeout              => '00:00:00',
+    restart_time_limit        => '00:00:00',
+  }
+  -> iis_site {'chocolateyserver':
     ensure          => 'started',
     physicalpath    => $_chocolatey_server_location,
-    applicationpool => "${_chocolatey_server_app_pool_name}",
+    applicationpool => $_chocolatey_server_app_pool_name,
+    preloadenabled  => true,
     require         => Package['chocolatey.server'],
-  } ->
+  }
 
   # lock down web directory
-  acl { "${_chocolatey_server_location}":
+  -> acl { $_chocolatey_server_location:
     purge                      => true,
     inherit_parent_permissions => false,
     permissions                => [
@@ -99,8 +108,8 @@ class chocolatey_server (
       { identity => "IIS APPPOOL\\${_chocolatey_server_app_pool_name}", rights => ['read'] }
     ],
     require                    => Package['chocolatey.server'],
-  } ->
-  acl { "${_chocolatey_server_location}/App_Data":
+  }
+  -> acl { "${_chocolatey_server_location}/App_Data":
     permissions => [
       { identity => "IIS APPPOOL\\${_chocolatey_server_app_pool_name}", rights => ['modify'] },
       { identity => 'IIS_IUSRS', rights => ['modify'] }
