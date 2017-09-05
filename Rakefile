@@ -14,7 +14,11 @@ end
 Rake::Task[:lint].clear
 
 PuppetLint.configuration.relative = true
+# These lint exclusions are in puppetlabs_spec_helper but needs a version above 0.10.3
+# Line length test is 80 chars in puppet-lint 1.1.0
 PuppetLint.configuration.send("disable_80chars")
+# Line length test is 140 chars in puppet-lint 2.x
+PuppetLint.configuration.send('disable_140chars')
 PuppetLint.configuration.log_format = "%{path}:%{linenumber}:%{check}:%{KIND}:%{message}"
 PuppetLint.configuration.fail_on_warnings = true
 
